@@ -11,9 +11,11 @@ A Telegram welcome bot project for Telebot Creator (TBC), written in TPY using d
 ## Planned flow
 1. `/start`: preserve an optional referral candidate, then show language selection if no language is saved.
 2. Language callback commands: save the chosen language and move to mandatory membership.
-3. `check_membership`: verify every configured chat ID, then award the referrer 15 configurable points once and give the new user the separate welcome level.
-4. Main menu: localized Reply Keyboard.
-5. Admin panel: manage required chat IDs/links and reward settings.
+3. `show_join_required`: check membership first; only display the join prompt when the user is not in all required chats.
+4. `check_membership`: acknowledge callback immediately, verify every configured chat ID, and continue without making a second callback answer.
+5. `complete_membership`: award the inviter 15 configurable points once and give the new user the separate welcome level once.
+6. Main menu: localized Reply Keyboard.
+7. Admin panel: manage required chat IDs/links and reward settings.
 
 ## Required chats (initial defaults)
 - Group ID: `-1003032328044`
@@ -26,7 +28,7 @@ A Telegram welcome bot project for Telebot Creator (TBC), written in TPY using d
 - Welcome reward: 1 level to every eligible new user, whether referred or not.
 
 ## Button styling
-Telegram Bot API 9.4+ supports `style` values `primary`, `success`, and `danger` on supported keyboard buttons. Actual rendering depends on Telegram client support. The main menu is intended to use a Reply Keyboard.
+Telegram Bot API supports button styles `primary`, `success`, and `danger` on supported keyboard buttons. Actual rendering depends on Telegram client support. The main menu is intended to use a Reply Keyboard.
 
 ## Command files committed so far
 - `commands/start.tpy` — captures an optional referral candidate and routes returning users.
@@ -34,8 +36,9 @@ Telegram Bot API 9.4+ supports `style` values `primary`, `success`, and `danger`
 - `commands/set_language_fa.tpy` — Persian language callback.
 - `commands/set_language_ar.tpy` — Arabic language callback.
 - `commands/set_language_en.tpy` — English language callback.
-- `commands/show_join_required.tpy` — renders configured required-chat links with styled inline buttons.
-- `commands/check_membership.tpy` — verifies configured Chat IDs and awards the inviter/welcome level once.
+- `commands/show_join_required.tpy` — checks existing membership and shows localized group/channel buttons only when needed.
+- `commands/check_membership.tpy` — answers callback first, checks membership, and routes successful users.
+- `commands/complete_membership.tpy` — handles one-time rewards and opens the main menu.
 - `commands/show_main_menu.tpy` — localized styled Reply Keyboard.
 
 ## Current status
