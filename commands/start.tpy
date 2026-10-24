@@ -24,10 +24,10 @@ else:
             "inline_keyboard": [
                 [
                     {"text": "🇦🇫 پښتو", "callback_data": "set_language_ps", "style": "primary"},
-                    {"text": "🇮🇷 فارسی", "callback_data": "set_language_fa", "style": "primary"}
+                    {"text": "🇮🇷 فارسی", "callback_data": "set_language_fa", "style": "success"}
                 ],
                 [
-                    {"text": "🇸🇦 العربية", "callback_data": "set_language_ar", "style": "primary"},
+                    {"text": "🇸🇦 العربية", "callback_data": "set_language_ar", "style": "danger"},
                     {"text": "🇬🇧 English", "callback_data": "set_language_en", "style": "primary"}
                 ]
             ]
