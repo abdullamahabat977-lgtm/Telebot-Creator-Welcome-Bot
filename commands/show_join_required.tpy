@@ -1,67 +1,52 @@
 # TBC command: show_join_required
-# Purpose: show the required group/channel links in the user's saved language.
-# Callback command check_membership will be implemented separately.
+# Purpose: show all configured mandatory chats from persistent bot-level storage.
+# Telegram Bot API 9.4+ supports button style: primary (blue), success (green), danger (red).
+
+required_chats = Bot.getData("required_chats")
+
+if not required_chats:
+    required_chats = [
+        {"id": -1003032328044, "link": "https://t.me/Links_and_Ads_Group", "title": "Links and Ads Group"},
+        {"id": -1003758811564, "link": "https://t.me/AbdullahAghaDigital", "title": "Abdullah Agha Digital"}
+    ]
+    Bot.saveData("required_chats", required_chats)
 
 language = User.getData("language")
 
 if language == "fa":
-    text = (
-        "🔒 برای استفاده از ربات، لطفاً در گروه و کانال زیر عضو شوید.\n\n"
-        "پس از عضویت در هر دو، دکمهٔ «بررسی عضویت» را بزنید."
-    )
-    group_label = "📢 عضویت در گروه"
-    channel_label = "📣 عضویت در کانال"
+    text = "🔒 برای استفاده از ربات، لطفاً در همه گروه‌ها و کانال‌های زیر عضو شوید.\n\nپس از عضویت، دکمهٔ «بررسی عضویت» را بزنید."
     check_label = "✅ بررسی عضویت"
 elif language == "ar":
-    text = (
-        "🔒 لاستخدام البوت، يرجى الانضمام إلى المجموعة والقناة أدناه.\n\n"
-        "بعد الانضمام إلى كليهما، اضغط على «التحقق من العضوية»."
-    )
-    group_label = "📢 الانضمام إلى المجموعة"
-    channel_label = "📣 الانضمام إلى القناة"
+    text = "🔒 لاستخدام البوت، يرجى الانضمام إلى جميع المجموعات والقنوات أدناه.\n\nبعد الانضمام، اضغط على «التحقق من العضوية»."
     check_label = "✅ التحقق من العضوية"
 elif language == "en":
-    text = (
-        "🔒 To use this bot, please join the group and channel below.\n\n"
-        "After joining both, press “Check Membership”."
-    )
-    group_label = "📢 Join Group"
-    channel_label = "📣 Join Channel"
+    text = "🔒 To use this bot, please join every group and channel listed below.\n\nAfter joining, press “Check Membership”."
     check_label = "✅ Check Membership"
 else:
-    text = (
-        "🔒 د بوټ کارولو لپاره لاندې ګروپ او چینل کې ګډون وکړئ.\n\n"
-        "په دواړو کې تر ګډون وروسته د «ګډون تایید» تڼۍ کېکاږئ."
-    )
-    group_label = "📢 ګروپ کې ګډون"
-    channel_label = "📣 چینل کې ګډون"
+    text = "🔒 د بوټ کارولو لپاره لاندې ټولو ګروپونو او چینلونو کې ګډون وکړئ.\n\nله ګډون وروسته د «ګډون تایید» تڼۍ کېکاږئ."
     check_label = "✅ ګډون تایید"
+
+keyboard = []
+for chat in required_chats:
+    keyboard.append([
+        {
+            "text": "📢 " + str(chat.get("title", "Join")),
+            "url": chat.get("link", "https://t.me"),
+            "style": "primary"
+        }
+    ])
+
+keyboard.append([
+    {
+        "text": check_label,
+        "callback_data": "check_membership",
+        "style": "success"
+    }
+])
 
 bot.sendMessage(
     text,
     reply_markup={
-        "inline_keyboard": [
-            [
-                {
-                    "text": group_label,
-                    "url": "https://t.me/Links_and_Ads_Group",
-                    "style": "primary"
-                }
-            ],
-            [
-                {
-                    "text": channel_label,
-                    "url": "https://t.me/AbdullahAghaDigital",
-                    "style": "primary"
-                }
-            ],
-            [
-                {
-                    "text": check_label,
-                    "callback_data": "check_membership",
-                    "style": "success"
-                }
-            ]
-        ]
+        "inline_keyboard": keyboard
     }
 )
