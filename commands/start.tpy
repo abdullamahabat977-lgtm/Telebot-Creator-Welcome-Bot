@@ -1,0 +1,34 @@
+# TBC command: /start
+# Purpose: preserve a referral candidate and show language selection when needed.
+# TBC command name: /start
+
+language = User.getData("language")
+
+# Keep the optional /start referral parameter until membership is confirmed.
+if params:
+    candidate = str(params).strip()
+    if candidate.isdigit() and candidate != str(u):
+        User.saveData("referrer_candidate", candidate)
+
+if language in ["ps", "fa", "ar", "en"]:
+    bot.runCommand("check_membership")
+    raise ReturnCommand
+
+bot.sendMessage(
+    "🌐 مهرباني وکړئ خپله ژبه انتخاب کړئ:\n"
+    "🌐 لطفاً زبان خود را انتخاب کنید:\n"
+    "🌐 الرجاء اختيار لغتك:\n"
+    "🌐 Please choose your language:",
+    reply_markup={
+        "inline_keyboard": [
+            [
+                {"text": "🇦🇫 پښتو", "callback_data": "set_language_ps", "style": "primary"},
+                {"text": "🇮🇷 فارسی", "callback_data": "set_language_fa", "style": "primary"}
+            ],
+            [
+                {"text": "🇸🇦 العربية", "callback_data": "set_language_ar", "style": "primary"},
+                {"text": "🇬🇧 English", "callback_data": "set_language_en", "style": "primary"}
+            ]
+        ]
+    }
+)
