@@ -1,8 +1,13 @@
 # TBC callback command: set_language_en
-# Stores English and replaces the language-selection message with required membership.
+# Answer the callback immediately so an expired callback cannot stop language selection.
+
+try:
+    bot.answerCallbackQuery(callback_query_id=message.id, text="English selected")
+except Exception:
+    # Continue even if Telegram has already expired or consumed this callback query.
+    pass
 
 User.saveData("language", "en")
-bot.answerCallbackQuery(callback_query_id=message.id, text="English selected")
 
 try:
     bot.deleteMessage(
