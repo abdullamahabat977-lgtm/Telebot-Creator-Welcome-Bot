@@ -1,0 +1,94 @@
+# TBC callback command: check_membership
+# Purpose:
+# 1) Verify the current user against required chat IDs (not usernames).
+# 2) Award the inviter 15 configurable points once, only after both memberships pass.
+# 3) Give every eligible new user the separate welcome level 1 once.
+#
+# Important: the bot must be able to access both chats. Telegram only guarantees
+# getChatMember for other users when the bot is an administrator in the chat.
+
+GROUP_ID = -1003032328044
+CHANNEL_ID = -1003758811564
+
+language = User.getData("language")
+
+if language == "fa":
+    not_joined_text = "❌ عضویت شما در هر دو مورد تأیید نشد. لطفاً عضو شوید و دوباره بررسی کنید."
+    check_error_text = "⚠️ بررسی عضویت فعلاً ممکن نیست. لطفاً دسترسی ربات و مدیر بودن آن در گروه و کانال بررسی شود."
+    success_text = "✅ عضویت شما تأیید شد."
+elif language == "ar":
+    not_joined_text = "❌ لم يتم تأكيد عضويتك في كليهما. انضم ثم حاول التحقق مرة أخرى."
+    check_error_text = "⚠️ تعذّر التحقق من العضوية. يرجى التأكد من وصول البوت وأنه مشرف في المجموعة والقناة."
+    success_text = "✅ تم تأكيد عضويتك."
+elif language == "en":
+    not_joined_text = "❌ Membership in both chats was not confirmed. Join them and check again."
+    check_error_text = "⚠️ Membership verification is unavailable. Check the bot's access and administrator status in both chats."
+    success_text = "✅ Membership confirmed."
+else:
+    not_joined_text = "❌ ستا په دواړو ځایونو کې ګډون تایید نه شو. ګډون وکړه او بیا یې تایید کړه."
+    check_error_text = "⚠️ د ګډون تایید اوس ممکن نه دی. د بوټ لاسرسی او په دواړو ځایونو کې د اډمین اجازه وګوره."
+    success_text = "✅ ستا ګډون تایید شو."
+
+bot.answerCallbackQuery(callback_query_id=message.id, text="Checking membership...")
+
+try:
+    group_member = bot.getChatMember(chat_id=GROUP_ID, user_id=u)
+    channel_member = bot.getChatMember(chat_id=CHANNEL_ID, user_id=u)
+
+    group_status = group_member.status
+    channel_status = channel_member.status
+
+    group_joined = (
+        group_status in ["creator", "administrator", "member"]
+        or (group_status == "restricted" and getattr(group_member, "is_member", False))
+    )
+    channel_joined = (
+        channel_status in ["creator", "administrator", "member"]
+        or (channel_status == "restricted" and getattr(channel_member, "is_member", False))
+    )
+
+except Exception:
+    bot.sendMessage(check_error_text)
+
+else:
+    if not (group_joined and channel_joined):
+        bot.answerCallbackQuery(callback_query_id=message.id, text=not_joined_text)
+    else:
+        # Welcome reward: one level for every new user, regardless of referral.
+        if not User.getData("welcome_level_awarded"):
+            current_level = User.getData("level")
+            if not current_level:
+                User.saveData("level", 1)
+            User.saveData("welcome_level_awarded", True)
+
+        # Referral reward: only the inviter receives points, and only once.
+        referrer_id = User.getData("referrer_candidate")
+        if referrer_id and str(referrer_id) != str(u) and not User.getData("referral_rewarded"):
+            reward = Bot.getData("referral_reward")
+            if reward is None:
+                reward = 15
+            reward = int(reward)
+
+            referrer_points = User.getData("points", user=str(referrer_id))
+            if not referrer_points:
+                referrer_points = 0
+
+            User.saveData(
+                "points",
+                int(referrer_points) + reward,
+                user=str(referrer_id)
+            )
+            User.saveData("referral_rewarded", True)
+
+        User.saveData("membership_completed", True)
+
+        try:
+            bot.deleteMessage(
+                chat_id=message.message.chat.id,
+                message_id=message.message.message_id
+            )
+        except Exception:
+            pass
+
+        bot.answerCallbackQuery(callback_query_id=message.id, text=success_text)
+        bot.runCommand("show_main_menu")
