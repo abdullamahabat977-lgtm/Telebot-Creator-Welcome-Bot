@@ -41,7 +41,11 @@ else:
     )
     # Store the exact Telegram message ID for reliable deletion in the callback.
     try:
-        User.saveData("language_prompt_chat_id", message.chat.id)
-        User.saveData("language_prompt_message_id", sent_language_prompt.message_id)
+        prompt_message_id = getattr(sent_language_prompt, "message_id", None)
+        if not prompt_message_id:
+            prompt_message_id = getattr(sent_language_prompt, "id", None)
+        if prompt_message_id:
+            User.saveData("language_prompt_chat_id", message.chat.id)
+            User.saveData("language_prompt_message_id", prompt_message_id)
     except Exception:
         pass
