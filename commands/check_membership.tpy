@@ -1,66 +1,70 @@
 # TBC callback command: check_membership
-# Purpose:
-# 1) Verify the current user against required chat IDs (not usernames).
-# 2) Award the inviter 15 configurable points once, only after both memberships pass.
-# 3) Give every eligible new user the separate welcome level 1 once.
+# Verifies every configured chat by Chat ID (not username).
+# Referral reward: 15 configurable points go to the inviter only, once, after successful membership.
+# Welcome reward: one level goes to every new user, referred or not, once.
 #
-# Important: the bot must be able to access both chats. Telegram only guarantees
-# getChatMember for other users when the bot is an administrator in the chat.
+# The bot must be an administrator in each required chat for Telegram to reliably
+# allow getChatMember checks for other users.
 
-GROUP_ID = -1003032328044
-CHANNEL_ID = -1003758811564
+required_chats = Bot.getData("required_chats")
+
+if not required_chats:
+    required_chats = [
+        {"id": -1003032328044, "link": "https://t.me/Links_and_Ads_Group", "title": "Links and Ads Group"},
+        {"id": -1003758811564, "link": "https://t.me/AbdullahAghaDigital", "title": "Abdullah Agha Digital"}
+    ]
+    Bot.saveData("required_chats", required_chats)
 
 language = User.getData("language")
 
 if language == "fa":
-    not_joined_text = "❌ عضویت شما در هر دو مورد تأیید نشد. لطفاً عضو شوید و دوباره بررسی کنید."
-    check_error_text = "⚠️ بررسی عضویت فعلاً ممکن نیست. لطفاً دسترسی ربات و مدیر بودن آن در گروه و کانال بررسی شود."
+    not_joined_text = "❌ عضویت شما در همه موارد تأیید نشد. لطفاً عضو شوید و دوباره بررسی کنید."
+    check_error_text = "⚠️ بررسی عضویت ممکن نیست. دسترسی ربات و مدیر بودن آن در همه گروه‌ها و کانال‌ها را بررسی کنید."
     success_text = "✅ عضویت شما تأیید شد."
 elif language == "ar":
-    not_joined_text = "❌ لم يتم تأكيد عضويتك في كليهما. انضم ثم حاول التحقق مرة أخرى."
-    check_error_text = "⚠️ تعذّر التحقق من العضوية. يرجى التأكد من وصول البوت وأنه مشرف في المجموعة والقناة."
+    not_joined_text = "❌ لم يتم تأكيد عضويتك في جميع الأماكن. انضم ثم حاول مرة أخرى."
+    check_error_text = "⚠️ تعذّر التحقق من العضوية. تأكد من وصول البوت وأنه مشرف في جميع المجموعات والقنوات."
     success_text = "✅ تم تأكيد عضويتك."
 elif language == "en":
-    not_joined_text = "❌ Membership in both chats was not confirmed. Join them and check again."
-    check_error_text = "⚠️ Membership verification is unavailable. Check the bot's access and administrator status in both chats."
+    not_joined_text = "❌ Membership in every required chat was not confirmed. Join them and check again."
+    check_error_text = "⚠️ Membership verification failed. Check the bot's access and administrator status in every required chat."
     success_text = "✅ Membership confirmed."
 else:
-    not_joined_text = "❌ ستا په دواړو ځایونو کې ګډون تایید نه شو. ګډون وکړه او بیا یې تایید کړه."
-    check_error_text = "⚠️ د ګډون تایید اوس ممکن نه دی. د بوټ لاسرسی او په دواړو ځایونو کې د اډمین اجازه وګوره."
+    not_joined_text = "❌ ستا په ټولو اړینو ځایونو کې ګډون تایید نه شو. ګډون وکړه او بیا یې تایید کړه."
+    check_error_text = "⚠️ د ګډون تایید ممکن نه شو. په ټولو اړینو ځایونو کې د بوټ لاسرسی او اډمین اجازه وګوره."
     success_text = "✅ ستا ګډون تایید شو."
 
 try:
-    group_member = bot.getChatMember(chat_id=GROUP_ID, user_id=u)
-    channel_member = bot.getChatMember(chat_id=CHANNEL_ID, user_id=u)
+    joined_all = True
 
-    group_status = group_member.status
-    channel_status = channel_member.status
+    for chat in required_chats:
+        member = bot.getChatMember(chat_id=int(chat["id"]), user_id=u)
+        status = member.status
 
-    group_joined = (
-        group_status in ["creator", "administrator", "member"]
-        or (group_status == "restricted" and getattr(group_member, "is_member", False))
-    )
-    channel_joined = (
-        channel_status in ["creator", "administrator", "member"]
-        or (channel_status == "restricted" and getattr(channel_member, "is_member", False))
-    )
+        joined_this_chat = (
+            status in ["creator", "administrator", "member"]
+            or (status == "restricted" and getattr(member, "is_member", False))
+        )
+
+        if not joined_this_chat:
+            joined_all = False
 
 except Exception:
     bot.answerCallbackQuery(callback_query_id=message.id, text=check_error_text)
     bot.sendMessage(check_error_text)
 
 else:
-    if not (group_joined and channel_joined):
+    if not joined_all:
         bot.answerCallbackQuery(callback_query_id=message.id, text=not_joined_text)
     else:
-        # Welcome reward: one level for every new user, regardless of referral.
+        # Welcome reward: one level for every eligible new user.
         if not User.getData("welcome_level_awarded"):
             current_level = User.getData("level")
             if not current_level:
                 User.saveData("level", 1)
             User.saveData("welcome_level_awarded", True)
 
-        # Referral reward: only the inviter receives points, and only once.
+        # Referral reward: award the inviter, not the invited user.
         referrer_id = User.getData("referrer_candidate")
         if referrer_id and str(referrer_id) != str(u) and not User.getData("referral_rewarded"):
             reward = Bot.getData("referral_reward")
