@@ -1,19 +1,21 @@
 # TBC callback command: set_language_ps
-# Answer the callback immediately so an expired callback cannot stop language selection.
-
 try:
     bot.answerCallbackQuery(callback_query_id=message.id, text="ژبه پښتو وټاکل شوه")
 except Exception:
-    # Continue even if Telegram has already expired or consumed this callback query.
     pass
 
 User.saveData("language", "ps")
 
+# Delete the original language-selection message. Try both common message ID fields
+# because TBC callback payload wrappers may expose either representation.
 try:
-    bot.deleteMessage(
-        chat_id=message.message.chat.id,
-        message_id=message.message.message_id
-    )
+    callback_message = message.message
+    callback_chat_id = callback_message.chat.id
+    callback_message_id = getattr(callback_message, "message_id", None)
+    if not callback_message_id:
+        callback_message_id = getattr(callback_message, "id", None)
+    if callback_chat_id and callback_message_id:
+        bot.deleteMessage(chat_id=callback_chat_id, message_id=callback_message_id)
 except Exception:
     pass
 
