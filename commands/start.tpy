@@ -1,10 +1,9 @@
 # TBC command: /start
-# Purpose: preserve a referral candidate and show language selection when needed.
-# TBC command name: /start
+# Purpose: preserve an optional referral candidate and route the user by saved state.
 
 language = User.getData("language")
 
-# Keep the optional /start referral parameter until membership is confirmed.
+# Save a referral candidate only once, and never let repeated /start links overwrite it.
 if params and not User.getData("referrer_candidate") and not User.getData("membership_completed"):
     candidate = str(params).strip()
     if candidate.isdigit() and candidate != str(u):
@@ -15,23 +14,22 @@ if language in ["ps", "fa", "ar", "en"]:
         bot.runCommand("show_main_menu")
     else:
         bot.runCommand("show_join_required")
-    raise ReturnCommand
-
-bot.sendMessage(
-    "🌐 مهرباني وکړئ خپله ژبه انتخاب کړئ:\n"
-    "🌐 لطفاً زبان خود را انتخاب کنید:\n"
-    "🌐 الرجاء اختيار لغتك:\n"
-    "🌐 Please choose your language:",
-    reply_markup={
-        "inline_keyboard": [
-            [
-                {"text": "🇦🇫 پښتو", "callback_data": "set_language_ps", "style": "primary"},
-                {"text": "🇮🇷 فارسی", "callback_data": "set_language_fa", "style": "primary"}
-            ],
-            [
-                {"text": "🇸🇦 العربية", "callback_data": "set_language_ar", "style": "primary"},
-                {"text": "🇬🇧 English", "callback_data": "set_language_en", "style": "primary"}
+else:
+    bot.sendMessage(
+        "🌐 مهرباني وکړئ خپله ژبه انتخاب کړئ:\n"
+        "🌐 لطفاً زبان خود را انتخاب کنید:\n"
+        "🌐 الرجاء اختيار لغتك:\n"
+        "🌐 Please choose your language:",
+        reply_markup={
+            "inline_keyboard": [
+                [
+                    {"text": "🇦🇫 پښتو", "callback_data": "set_language_ps", "style": "primary"},
+                    {"text": "🇮🇷 فارسی", "callback_data": "set_language_fa", "style": "primary"}
+                ],
+                [
+                    {"text": "🇸🇦 العربية", "callback_data": "set_language_ar", "style": "primary"},
+                    {"text": "🇬🇧 English", "callback_data": "set_language_en", "style": "primary"}
+                ]
             ]
-        ]
-    }
-)
+        }
+    )
