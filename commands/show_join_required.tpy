@@ -1,0 +1,67 @@
+# TBC command: show_join_required
+# Purpose: show the required group/channel links in the user's saved language.
+# Callback command check_membership will be implemented separately.
+
+language = User.getData("language")
+
+if language == "fa":
+    text = (
+        "🔒 برای استفاده از ربات، لطفاً در گروه و کانال زیر عضو شوید.\n\n"
+        "پس از عضویت در هر دو، دکمهٔ «بررسی عضویت» را بزنید."
+    )
+    group_label = "📢 عضویت در گروه"
+    channel_label = "📣 عضویت در کانال"
+    check_label = "✅ بررسی عضویت"
+elif language == "ar":
+    text = (
+        "🔒 لاستخدام البوت، يرجى الانضمام إلى المجموعة والقناة أدناه.\n\n"
+        "بعد الانضمام إلى كليهما، اضغط على «التحقق من العضوية»."
+    )
+    group_label = "📢 الانضمام إلى المجموعة"
+    channel_label = "📣 الانضمام إلى القناة"
+    check_label = "✅ التحقق من العضوية"
+elif language == "en":
+    text = (
+        "🔒 To use this bot, please join the group and channel below.\n\n"
+        "After joining both, press “Check Membership”."
+    )
+    group_label = "📢 Join Group"
+    channel_label = "📣 Join Channel"
+    check_label = "✅ Check Membership"
+else:
+    text = (
+        "🔒 د بوټ کارولو لپاره لاندې ګروپ او چینل کې ګډون وکړئ.\n\n"
+        "په دواړو کې تر ګډون وروسته د «ګډون تایید» تڼۍ کېکاږئ."
+    )
+    group_label = "📢 ګروپ کې ګډون"
+    channel_label = "📣 چینل کې ګډون"
+    check_label = "✅ ګډون تایید"
+
+bot.sendMessage(
+    text,
+    reply_markup={
+        "inline_keyboard": [
+            [
+                {
+                    "text": group_label,
+                    "url": "https://t.me/Links_and_Ads_Group",
+                    "style": "primary"
+                }
+            ],
+            [
+                {
+                    "text": channel_label,
+                    "url": "https://t.me/AbdullahAghaDigital",
+                    "style": "primary"
+                }
+            ],
+            [
+                {
+                    "text": check_label,
+                    "callback_data": "check_membership",
+                    "style": "success"
+                }
+            ]
+        ]
+    }
+)
