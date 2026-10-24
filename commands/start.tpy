@@ -21,10 +21,10 @@ if language in ["ps", "fa", "ar", "en"]:
     else:
         bot.runCommand("show_join_required")
 else:
-    bot.sendMessage(
-        "🌐 مهرباني وکړئ خپله ژبه انتخاب کړئ:\n"
-        "🌐 لطفاً زبان خود را انتخاب کنید:\n"
-        "🌐 الرجاء اختيار لغتك:\n"
+    sent_language_prompt = bot.sendMessage(
+        "🌐 مهرباني وکړئ خپله ژبه انتخاب کړئ:\\n"
+        "🌐 لطفاً زبان خود را انتخاب کنید:\\n"
+        "🌐 الرجاء اختيار لغتك:\\n"
         "🌐 Please choose your language:",
         reply_markup={
             "inline_keyboard": [
@@ -39,3 +39,9 @@ else:
             ]
         }
     )
+    # Store the exact Telegram message ID for reliable deletion in the callback.
+    try:
+        User.saveData("language_prompt_chat_id", message.chat.id)
+        User.saveData("language_prompt_message_id", sent_language_prompt.message_id)
+    except Exception:
+        pass
