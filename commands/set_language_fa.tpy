@@ -1,8 +1,13 @@
 # TBC callback command: set_language_fa
-# Stores Persian and replaces the language-selection message with required membership.
+# Answer the callback immediately so an expired callback cannot stop language selection.
+
+try:
+    bot.answerCallbackQuery(callback_query_id=message.id, text="زبان فارسی انتخاب شد")
+except Exception:
+    # Continue even if Telegram has already expired or consumed this callback query.
+    pass
 
 User.saveData("language", "fa")
-bot.answerCallbackQuery(callback_query_id=message.id, text="زبان فارسی انتخاب شد")
 
 try:
     bot.deleteMessage(
