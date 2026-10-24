@@ -1,0 +1,39 @@
+# TBC command: show_main_menu
+# Purpose: show the localized main menu using a styled Reply Keyboard.
+# Reply keyboard styles are supported by Telegram Bot API 9.4+; older clients may ignore styles.
+
+language = User.getData("language")
+
+if language == "fa":
+    text = "🎉 خوش آمدید! عضویت شما تأیید شد.\nاز منوی زیر استفاده کنید:"
+    keyboard = [
+        [{"text": "👤 پروفایل من", "style": "primary"}, {"text": "🎁 دعوت دوستان", "style": "success"}],
+        [{"text": "ℹ️ راهنما", "style": "primary"}, {"text": "🌐 تغییر زبان", "style": "primary"}]
+    ]
+elif language == "ar":
+    text = "🎉 أهلاً بك! تم تأكيد عضويتك.\nاستخدم القائمة أدناه:"
+    keyboard = [
+        [{"text": "👤 ملفي الشخصي", "style": "primary"}, {"text": "🎁 دعوة الأصدقاء", "style": "success"}],
+        [{"text": "ℹ️ المساعدة", "style": "primary"}, {"text": "🌐 تغيير اللغة", "style": "primary"}]
+    ]
+elif language == "en":
+    text = "🎉 Welcome! Your membership is confirmed.\nChoose an option below:"
+    keyboard = [
+        [{"text": "👤 My Profile", "style": "primary"}, {"text": "🎁 Invite Friends", "style": "success"}],
+        [{"text": "ℹ️ Help", "style": "primary"}, {"text": "🌐 Change Language", "style": "primary"}]
+    ]
+else:
+    text = "🎉 ښه راغلاست! ستا ګډون تایید شو.\nله لاندې مینو څخه یوه برخه انتخاب کړه:"
+    keyboard = [
+        [{"text": "👤 زما پروفایل", "style": "primary"}, {"text": "🎁 ملګري دعوت کړه", "style": "success"}],
+        [{"text": "ℹ️ مرسته", "style": "primary"}, {"text": "🌐 ژبه بدلول", "style": "primary"}]
+    ]
+
+bot.sendMessage(
+    text,
+    reply_markup={
+        "keyboard": keyboard,
+        "resize_keyboard": True,
+        "is_persistent": True
+    }
+)
