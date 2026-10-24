@@ -1,16 +1,30 @@
 # TBC command: complete_membership
-# Called only after every required group/channel has been confirmed.
-# Rewards are guarded so repeated starts/checks do not award them again.
+# Runs only after all required memberships are confirmed.
+# Welcome level and referral reward are awarded once; inviter is notified with the invitee's name.
 
 if not User.getData("membership_completed"):
-    # Welcome reward: every new user receives one level, regardless of referral.
+    language = User.getData("language")
+
+    # Give the new user one welcome level and send a localized welcome message.
     if not User.getData("welcome_level_awarded"):
         current_level = User.getData("level")
         if not current_level:
-            User.saveData("level", 1)
+            current_level = 0
+        new_level = int(current_level) + 1
+        User.saveData("level", new_level)
         User.saveData("welcome_level_awarded", True)
 
-    # Referral reward goes to the inviter, not the newly joined user.
+        if language == "fa":
+            welcome_text = "🎉🌟 به ربات خوش آمدید!\n\nبرای خوش‌آمدگویی، 🎁 یک سطح (Level) به شما هدیه داده شد.\nسطح فعلی شما: " + str(new_level) + "\n\nاز امکانات ربات لذت ببرید! 💙"
+        elif language == "ar":
+            welcome_text = "🎉🌟 أهلًا وسهلًا بك في البوت!\n\nهدية ترحيب 🎁: حصلت على مستوى واحد إضافي (Level).\nمستواك الحالي: " + str(new_level) + "\n\nنتمنى لك تجربة ممتعة! 💙"
+        elif language == "en":
+            welcome_text = "🎉🌟 Welcome aboard!\n\nYour welcome gift is 🎁 +1 Level!\nYour current level: " + str(new_level) + "\n\nEnjoy exploring the bot! 💙"
+        else:
+            welcome_text = "🎉🌟 زموږ بوټ ته ښه راغلاست!\n\nد ښه راغلاست ډالۍ 🎁: تا ۱ نوی لېول ترلاسه کړ!\nستا اوسنی لېول: " + str(new_level) + "\n\nهیله ده له بوټ څخه خوند واخلې! 💙"
+        bot.sendMessage(welcome_text)
+
+    # Referral reward is awarded to the inviter, never to the invited user.
     referrer_id = User.getData("referrer_candidate")
     if referrer_id and str(referrer_id) != str(u) and not User.getData("referral_rewarded"):
         reward = Bot.getData("referral_reward")
@@ -21,13 +35,27 @@ if not User.getData("membership_completed"):
         referrer_points = User.getData("points", user=str(referrer_id))
         if not referrer_points:
             referrer_points = 0
-
-        User.saveData(
-            "points",
-            int(referrer_points) + reward,
-            user=str(referrer_id)
-        )
+        User.saveData("points", int(referrer_points) + reward, user=str(referrer_id))
         User.saveData("referral_rewarded", True)
+
+        invited_name = User.getData("referral_invitee_name")
+        if not invited_name:
+            invited_name = "New user"
+
+        referrer_language = User.getData("language", user=str(referrer_id))
+        if referrer_language == "fa":
+            referral_text = "🎉🌟 خبر عالی!\n\nدوست دعوت‌شدهٔ شما، «" + str(invited_name) + "»، با لینک دعوت شما وارد ربات شد و عضویت‌های لازم را کامل کرد.\n\n🎁 پاداش شما: +" + str(reward) + " امتیاز\n💰 امتیازهایتان با موفقیت افزایش یافت!"
+        elif referrer_language == "ar":
+            referral_text = "🎉🌟 خبر رائع!\n\nانضم «" + str(invited_name) + "» إلى البوت عبر رابط دعوتك وأكمل الاشتراك في الأماكن المطلوبة.\n\n🎁 مكافأتك: +" + str(reward) + " نقطة\n💰 تمت إضافة المكافأة إلى رصيدك!"
+        elif referrer_language == "en":
+            referral_text = "🎉🌟 Great news!\n\nYour invite, “" + str(invited_name) + "”, joined through your referral link and completed the required memberships.\n\n🎁 Your reward: +" + str(reward) + " points\n💰 The points have been added to your balance!"
+        else:
+            referral_text = "🎉🌟 ښه زېرى!\n\nستا بلل شوی ملګری «" + str(invited_name) + "» ستا د ریفرل لینک له لارې بوټ ته راغی او اړین ګډونونه یې بشپړ کړل.\n\n🎁 ستا جایزه: +" + str(reward) + " پواینټونه\n💰 جایزه ستا حساب ته اضافه شوه!"
+        try:
+            bot.sendMessage(chat_id=int(referrer_id), text=referral_text)
+        except Exception:
+            # The reward is saved even if the inviter has blocked the bot.
+            pass
 
     User.saveData("membership_completed", True)
 
