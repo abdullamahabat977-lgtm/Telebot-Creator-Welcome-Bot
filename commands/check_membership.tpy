@@ -7,16 +7,30 @@ try:
 except Exception:
     pass
 
+deleted_prompt = False
 try:
-    callback_message = message.message
-    callback_chat_id = callback_message.chat.id
-    callback_message_id = getattr(callback_message, "message_id", None)
-    if not callback_message_id:
-        callback_message_id = getattr(callback_message, "id", None)
-    if callback_chat_id and callback_message_id:
-        bot.deleteMessage(chat_id=callback_chat_id, message_id=callback_message_id)
+    saved_chat_id = User.getData("join_prompt_chat_id")
+    saved_message_id = User.getData("join_prompt_message_id")
+    if saved_chat_id and saved_message_id:
+        bot.deleteMessage(chat_id=saved_chat_id, message_id=saved_message_id)
+        deleted_prompt = True
 except Exception:
     pass
+
+if not deleted_prompt:
+    try:
+        callback_message = message.message
+        callback_chat_id = callback_message.chat.id
+        callback_message_id = getattr(callback_message, "message_id", None)
+        if not callback_message_id:
+            callback_message_id = getattr(callback_message, "id", None)
+        if callback_chat_id and callback_message_id:
+            bot.deleteMessage(chat_id=callback_chat_id, message_id=callback_message_id)
+    except Exception:
+        pass
+
+User.deleteData("join_prompt_chat_id")
+User.deleteData("join_prompt_message_id")
 
 required_chats = Bot.getData("required_chats")
 if not required_chats:
