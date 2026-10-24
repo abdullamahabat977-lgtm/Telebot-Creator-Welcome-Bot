@@ -11,7 +11,10 @@ if params and not User.getData("referrer_candidate") and not User.getData("membe
         User.saveData("referrer_candidate", candidate)
 
 if language in ["ps", "fa", "ar", "en"]:
-    bot.runCommand("check_membership")
+    if User.getData("membership_completed"):
+        bot.runCommand("show_main_menu")
+    else:
+        bot.runCommand("show_join_required")
     raise ReturnCommand
 
 bot.sendMessage(
