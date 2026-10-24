@@ -29,8 +29,6 @@ else:
     check_error_text = "⚠️ د ګډون تایید اوس ممکن نه دی. د بوټ لاسرسی او په دواړو ځایونو کې د اډمین اجازه وګوره."
     success_text = "✅ ستا ګډون تایید شو."
 
-bot.answerCallbackQuery(callback_query_id=message.id, text="Checking membership...")
-
 try:
     group_member = bot.getChatMember(chat_id=GROUP_ID, user_id=u)
     channel_member = bot.getChatMember(chat_id=CHANNEL_ID, user_id=u)
@@ -48,6 +46,7 @@ try:
     )
 
 except Exception:
+    bot.answerCallbackQuery(callback_query_id=message.id, text=check_error_text)
     bot.sendMessage(check_error_text)
 
 else:
