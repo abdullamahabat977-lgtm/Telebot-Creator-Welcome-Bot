@@ -86,7 +86,13 @@ else:
                 "style": "danger"
             }])
 
-            bot.sendMessage(
+            sent_join_prompt = bot.sendMessage(
                 text,
                 reply_markup={"inline_keyboard": keyboard}
             )
+            # Store this prompt's ID so check_membership can delete the exact message.
+            try:
+                User.saveData("join_prompt_chat_id", u)
+                User.saveData("join_prompt_message_id", sent_join_prompt.message_id)
+            except Exception:
+                pass
