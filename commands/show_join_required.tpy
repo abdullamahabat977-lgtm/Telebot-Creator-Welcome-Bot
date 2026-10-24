@@ -1,52 +1,92 @@
 # TBC command: show_join_required
-# Purpose: show all configured mandatory chats from persistent bot-level storage.
-# Telegram Bot API 9.4+ supports button style: primary (blue), success (green), danger (red).
+# If the user already joined every required chat, skip the join prompt and continue.
+# If membership cannot be checked, show a localized permission/error notice instead.
 
 required_chats = Bot.getData("required_chats")
-
 if not required_chats:
     required_chats = [
-        {"id": -1003032328044, "link": "https://t.me/Links_and_Ads_Group", "title": "Links and Ads Group"},
-        {"id": -1003758811564, "link": "https://t.me/AbdullahAghaDigital", "title": "Abdullah Agha Digital"}
+        {"id": -1003032328044, "link": "https://t.me/Links_and_Ads_Group", "title": "Links and Ads Group", "type": "group"},
+        {"id": -1003758811564, "link": "https://t.me/AbdullahAghaDigital", "title": "Abdullah Agha Digital", "type": "channel"}
     ]
     Bot.saveData("required_chats", required_chats)
 
 language = User.getData("language")
 
 if language == "fa":
-    text = "🔒 برای استفاده از ربات، لطفاً در همه گروه‌ها و کانال‌های زیر عضو شوید.\n\nپس از عضویت، دکمهٔ «بررسی عضویت» را بزنید."
+    text = "🔒 برای استفاده از ربات، لطفاً به همه گروه‌ها و کانال‌های زیر بپیوندید. اگر از قبل عضو هستید، نیازی به عضویت دوباره نیست؛ بررسی عضویت را بزنید."
     check_label = "✅ بررسی عضویت"
+    group_label = "👥 عضویت در گروه"
+    channel_label = "📢 عضویت در کانال"
+    verify_error = "⚠️ بررسی عضویت ممکن نشد. لطفاً دسترسی ربات و مدیر بودن آن در همه گروه‌ها و کانال‌ها را بررسی کنید."
 elif language == "ar":
-    text = "🔒 لاستخدام البوت، يرجى الانضمام إلى جميع المجموعات والقنوات أدناه.\n\nبعد الانضمام، اضغط على «التحقق من العضوية»."
+    text = "🔒 لاستخدام البوت، يرجى الانضمام إلى جميع المجموعات والقنوات أدناه. إذا كنت عضوًا بالفعل، فلا حاجة للانضمام مرة أخرى؛ اضغط على التحقق من العضوية."
     check_label = "✅ التحقق من العضوية"
+    group_label = "👥 الانضمام إلى المجموعة"
+    channel_label = "📢 الانضمام إلى القناة"
+    verify_error = "⚠️ تعذّر التحقق من العضوية. تحقق من صلاحيات البوت ومن كونه مشرفًا في جميع المجموعات والقنوات."
 elif language == "en":
-    text = "🔒 To use this bot, please join every group and channel listed below.\n\nAfter joining, press “Check Membership”."
-    check_label = "✅ Check Membership"
+    text = "🔒 To use this bot, join every group and channel below. If you're already a member, you don't need to join again—just check your membership."
+    check_label = "✅ Check membership"
+    group_label = "👥 Join group"
+    channel_label = "📢 Join channel"
+    verify_error = "⚠️ Membership could not be checked. Make sure the bot has access and is an administrator in every required group and channel."
 else:
-    text = "🔒 د بوټ کارولو لپاره لاندې ټولو ګروپونو او چینلونو کې ګډون وکړئ.\n\nله ګډون وروسته د «ګډون تایید» تڼۍ کېکاږئ."
+    text = "🔒 د بوټ کارولو لپاره لاندې ټولو ګروپونو او چینلونو کې ګډون وکړئ. که له مخکې غړی یې، بیا ګډون ته اړتیا نشته؛ یوازې د ګډون تایید تڼۍ کېکاږه."
     check_label = "✅ ګډون تایید"
+    group_label = "👥 ګروپ ته ګډون"
+    channel_label = "📢 چینل ته ګډون"
+    verify_error = "⚠️ د ګډون تایید ممکن نه شو. د بوټ لاسرسی او په ټولو اړینو ګروپونو او چینلونو کې د اډمین اجازه وګوره."
 
-keyboard = []
-for chat in required_chats:
-    keyboard.append([
-        {
-            "text": "📢 " + str(chat.get("title", "Join")),
-            "url": chat.get("link", "https://t.me"),
-            "style": "primary"
-        }
-    ])
+if User.getData("membership_completed"):
+    bot.runCommand("show_main_menu")
+else:
+    try:
+        joined_all = True
+        for chat in required_chats:
+            member = bot.getChatMember(chat_id=int(chat["id"]), user_id=u)
+            status = member.status
+            joined_this_chat = (
+                status in ["creator", "administrator", "member"]
+                or (status == "restricted" and getattr(member, "is_member", False))
+            )
+            if not joined_this_chat:
+                joined_all = False
+    except Exception:
+        bot.sendMessage(verify_error)
+    else:
+        if joined_all:
+            bot.runCommand("complete_membership")
+        else:
+            keyboard = []
+            for index, chat in enumerate(required_chats):
+                chat_type = str(chat.get("type", "")).lower()
+                title_lower = str(chat.get("title", "")).lower()
+                if chat_type not in ["group", "channel"]:
+                    if "group" in title_lower or "ګروپ" in title_lower:
+                        chat_type = "group"
+                    else:
+                        chat_type = "channel"
 
-keyboard.append([
-    {
-        "text": check_label,
-        "callback_data": "check_membership",
-        "style": "success"
-    }
-])
+                if chat_type == "group":
+                    label = group_label
+                    button_style = "success"
+                else:
+                    label = channel_label
+                    button_style = "primary" if index % 2 == 0 else "danger"
 
-bot.sendMessage(
-    text,
-    reply_markup={
-        "inline_keyboard": keyboard
-    }
-)
+                keyboard.append([{
+                    "text": label,
+                    "url": chat.get("link", "https://t.me"),
+                    "style": button_style
+                }])
+
+            keyboard.append([{
+                "text": check_label,
+                "callback_data": "check_membership",
+                "style": "danger"
+            }])
+
+            bot.sendMessage(
+                text,
+                reply_markup={"inline_keyboard": keyboard}
+            )
