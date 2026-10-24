@@ -6,16 +6,30 @@ except Exception:
 
 User.saveData("language", "ar")
 
-# Delete the original language-selection message.
+# Delete the exact language prompt saved by /start; fall back to callback payload IDs.
+deleted_prompt = False
 try:
-    callback_message = message.message
-    callback_chat_id = callback_message.chat.id
-    callback_message_id = getattr(callback_message, "message_id", None)
-    if not callback_message_id:
-        callback_message_id = getattr(callback_message, "id", None)
-    if callback_chat_id and callback_message_id:
-        bot.deleteMessage(chat_id=callback_chat_id, message_id=callback_message_id)
+    saved_chat_id = User.getData("language_prompt_chat_id")
+    saved_message_id = User.getData("language_prompt_message_id")
+    if saved_chat_id and saved_message_id:
+        bot.deleteMessage(chat_id=saved_chat_id, message_id=saved_message_id)
+        deleted_prompt = True
 except Exception:
     pass
+
+if not deleted_prompt:
+    try:
+        callback_message = message.message
+        callback_chat_id = callback_message.chat.id
+        callback_message_id = getattr(callback_message, "message_id", None)
+        if not callback_message_id:
+            callback_message_id = getattr(callback_message, "id", None)
+        if callback_chat_id and callback_message_id:
+            bot.deleteMessage(chat_id=callback_chat_id, message_id=callback_message_id)
+    except Exception:
+        pass
+
+User.deleteData("language_prompt_chat_id")
+User.deleteData("language_prompt_message_id")
 
 bot.runCommand("show_join_required")
