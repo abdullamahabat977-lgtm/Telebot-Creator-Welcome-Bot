@@ -5,7 +5,7 @@
 language = User.getData("language")
 
 # Keep the optional /start referral parameter until membership is confirmed.
-if params:
+if params and not User.getData("referrer_candidate") and not User.getData("membership_completed"):
     candidate = str(params).strip()
     if candidate.isdigit() and candidate != str(u):
         User.saveData("referrer_candidate", candidate)
