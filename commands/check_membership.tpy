@@ -8,10 +8,13 @@ except Exception:
     pass
 
 try:
-    bot.deleteMessage(
-        chat_id=message.message.chat.id,
-        message_id=message.message.message_id
-    )
+    callback_message = message.message
+    callback_chat_id = callback_message.chat.id
+    callback_message_id = getattr(callback_message, "message_id", None)
+    if not callback_message_id:
+        callback_message_id = getattr(callback_message, "id", None)
+    if callback_chat_id and callback_message_id:
+        bot.deleteMessage(chat_id=callback_chat_id, message_id=callback_message_id)
 except Exception:
     pass
 
