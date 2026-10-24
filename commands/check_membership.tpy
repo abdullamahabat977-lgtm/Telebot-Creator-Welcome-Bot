@@ -1,38 +1,35 @@
 # TBC callback command: check_membership
-# Verifies every configured chat by Chat ID (not username).
-# Referral reward: 15 configurable points go to the inviter only, once, after successful membership.
-# Welcome reward: one level goes to every new user, referred or not, once.
-#
-# The bot must be an administrator in each required chat for Telegram to reliably
-# allow getChatMember checks for other users.
+# Acknowledge the button immediately: Telegram callback queries expire quickly.
+# Do not call answerCallbackQuery again later in this command.
+# The bot must be an administrator in required chats for reliable getChatMember checks.
+
+try:
+    bot.answerCallbackQuery(callback_query_id=message.id, text="🔎")
+except Exception:
+    # An expired/invalid callback must not prevent the membership check from running.
+    pass
 
 required_chats = Bot.getData("required_chats")
-
 if not required_chats:
     required_chats = [
-        {"id": -1003032328044, "link": "https://t.me/Links_and_Ads_Group", "title": "Links and Ads Group"},
-        {"id": -1003758811564, "link": "https://t.me/AbdullahAghaDigital", "title": "Abdullah Agha Digital"}
+        {"id": -1003032328044, "link": "https://t.me/Links_and_Ads_Group", "title": "Links and Ads Group", "type": "group"},
+        {"id": -1003758811564, "link": "https://t.me/AbdullahAghaDigital", "title": "Abdullah Agha Digital", "type": "channel"}
     ]
     Bot.saveData("required_chats", required_chats)
 
 language = User.getData("language")
-
 if language == "fa":
-    not_joined_text = "❌ عضویت شما در همه موارد تأیید نشد. لطفاً عضو شوید و دوباره بررسی کنید."
-    check_error_text = "⚠️ بررسی عضویت ممکن نیست. دسترسی ربات و مدیر بودن آن در همه گروه‌ها و کانال‌ها را بررسی کنید."
-    success_text = "✅ عضویت شما تأیید شد."
+    not_joined_text = "❌ عضویت شما در همه گروه‌ها و کانال‌های الزامی تأیید نشد. لطفاً عضو شوید و دوباره بررسی کنید."
+    check_error_text = "⚠️ بررسی عضویت ممکن نیست. لطفاً دسترسی ربات و مدیر بودن آن در همه گروه‌ها و کانال‌ها را بررسی کنید."
 elif language == "ar":
-    not_joined_text = "❌ لم يتم تأكيد عضويتك في جميع الأماكن. انضم ثم حاول مرة أخرى."
-    check_error_text = "⚠️ تعذّر التحقق من العضوية. تأكد من وصول البوت وأنه مشرف في جميع المجموعات والقنوات."
-    success_text = "✅ تم تأكيد عضويتك."
+    not_joined_text = "❌ لم يتم تأكيد عضويتك في جميع المجموعات والقنوات المطلوبة. انضم إليها ثم حاول مجددًا."
+    check_error_text = "⚠️ تعذّر التحقق من العضوية. تحقق من صلاحيات البوت ومن كونه مشرفًا في جميع المجموعات والقنوات."
 elif language == "en":
-    not_joined_text = "❌ Membership in every required chat was not confirmed. Join them and check again."
-    check_error_text = "⚠️ Membership verification failed. Check the bot's access and administrator status in every required chat."
-    success_text = "✅ Membership confirmed."
+    not_joined_text = "❌ We couldn't confirm that you've joined every required group and channel. Join them, then check again."
+    check_error_text = "⚠️ Membership could not be checked. Make sure the bot has access and is an administrator in every required group and channel."
 else:
-    not_joined_text = "❌ ستا په ټولو اړینو ځایونو کې ګډون تایید نه شو. ګډون وکړه او بیا یې تایید کړه."
-    check_error_text = "⚠️ د ګډون تایید ممکن نه شو. په ټولو اړینو ځایونو کې د بوټ لاسرسی او اډمین اجازه وګوره."
-    success_text = "✅ ستا ګډون تایید شو."
+    not_joined_text = "❌ ستا ګډون په ټولو اړینو ګروپونو او چینلونو کې تایید نه شو. لومړی ګډون وکړه، بیا یې تایید کړه."
+    check_error_text = "⚠️ د ګډون تایید ممکن نه شو. د بوټ لاسرسی او په ټولو اړینو ګروپونو او چینلونو کې د اډمین اجازه وګوره."
 
 try:
     joined_all = True
@@ -40,51 +37,19 @@ try:
     for chat in required_chats:
         member = bot.getChatMember(chat_id=int(chat["id"]), user_id=u)
         status = member.status
-
         joined_this_chat = (
             status in ["creator", "administrator", "member"]
             or (status == "restricted" and getattr(member, "is_member", False))
         )
-
         if not joined_this_chat:
             joined_all = False
-
 except Exception:
-    bot.answerCallbackQuery(callback_query_id=message.id, text=check_error_text)
     bot.sendMessage(check_error_text)
-
 else:
     if not joined_all:
-        bot.answerCallbackQuery(callback_query_id=message.id, text=not_joined_text)
+        bot.sendMessage(not_joined_text)
     else:
-        # Welcome reward: one level for every eligible new user.
-        if not User.getData("welcome_level_awarded"):
-            current_level = User.getData("level")
-            if not current_level:
-                User.saveData("level", 1)
-            User.saveData("welcome_level_awarded", True)
-
-        # Referral reward: award the inviter, not the invited user.
-        referrer_id = User.getData("referrer_candidate")
-        if referrer_id and str(referrer_id) != str(u) and not User.getData("referral_rewarded"):
-            reward = Bot.getData("referral_reward")
-            if reward is None:
-                reward = 15
-            reward = int(reward)
-
-            referrer_points = User.getData("points", user=str(referrer_id))
-            if not referrer_points:
-                referrer_points = 0
-
-            User.saveData(
-                "points",
-                int(referrer_points) + reward,
-                user=str(referrer_id)
-            )
-            User.saveData("referral_rewarded", True)
-
-        User.saveData("membership_completed", True)
-
+        # Remove the old join prompt before showing the main menu.
         try:
             bot.deleteMessage(
                 chat_id=message.message.chat.id,
@@ -92,6 +57,4 @@ else:
             )
         except Exception:
             pass
-
-        bot.answerCallbackQuery(callback_query_id=message.id, text=success_text)
-        bot.runCommand("show_main_menu")
+        bot.runCommand("complete_membership")
