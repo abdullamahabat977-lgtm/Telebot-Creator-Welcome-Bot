@@ -1,13 +1,19 @@
 # TBC command: /start
-# Purpose: preserve an optional referral candidate and route the user by saved state.
+# Captures a referral candidate only once and saves the invited user's display name
+# so the inviter can be told who joined through their referral link.
 
 language = User.getData("language")
 
-# Save a referral candidate only once, and never let repeated /start links overwrite it.
 if params and not User.getData("referrer_candidate") and not User.getData("membership_completed"):
     candidate = str(params).strip()
     if candidate.isdigit() and candidate != str(u):
         User.saveData("referrer_candidate", candidate)
+        try:
+            invited_name = str(message.from_user.first_name)
+            if invited_name and invited_name != "None":
+                User.saveData("referral_invitee_name", invited_name)
+        except Exception:
+            User.saveData("referral_invitee_name", "New user")
 
 if language in ["ps", "fa", "ar", "en"]:
     if User.getData("membership_completed"):
