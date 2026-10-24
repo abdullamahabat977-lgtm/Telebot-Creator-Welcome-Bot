@@ -28,5 +28,15 @@ A Telegram welcome bot project for Telebot Creator (TBC), written in TPY using d
 ## Button styling
 Telegram Bot API 9.4+ supports `style` values `primary`, `success`, and `danger` on supported keyboard buttons. Actual rendering depends on Telegram client support. The main menu is intended to use a Reply Keyboard.
 
+## Command files committed so far
+- `commands/start.tpy` — captures an optional referral candidate and routes returning users.
+- `commands/set_language_ps.tpy` — Pashto language callback.
+- `commands/set_language_fa.tpy` — Persian language callback.
+- `commands/set_language_ar.tpy` — Arabic language callback.
+- `commands/set_language_en.tpy` — English language callback.
+- `commands/show_join_required.tpy` — renders configured required-chat links with styled inline buttons.
+- `commands/check_membership.tpy` — verifies configured Chat IDs and awards the inviter/welcome level once.
+- `commands/show_main_menu.tpy` — localized styled Reply Keyboard.
+
 ## Current status
-Initial command source is being added incrementally. Do not consider the bot complete until all command files are installed in TBC and end-to-end tests pass.
+These source files have been committed to GitHub. They are not automatically synchronized to the Telebot Creator dashboard; install each command in TBC using the matching command name and test it there. The admin panel still needs the owner's numeric Telegram user ID before we can lock down admin-only actions safely. Do not consider the bot complete until all command files are installed in TBC and end-to-end tests pass.
