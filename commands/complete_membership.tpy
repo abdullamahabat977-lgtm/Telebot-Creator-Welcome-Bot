@@ -64,25 +64,25 @@ if not User.getData("membership_completed"):
 menu_language = User.getData("language")
 
 if menu_language == "fa":
-    menu_text = "🎉 خوش آمدید! عضویت شما تأیید شد.\\nاز منوی زیر استفاده کنید:"
+    menu_text = "🎉 خوش آمدید! عضویت شما تأیید شد.\nاز منوی زیر استفاده کنید:"
     menu_keyboard = [
         [{"text": "👤 پروفایل من", "style": "primary"}, {"text": "🎁 دعوت دوستان", "style": "success"}],
         [{"text": "ℹ️ راهنما", "style": "primary"}, {"text": "🌐 تغییر زبان", "style": "primary"}]
     ]
 elif menu_language == "ar":
-    menu_text = "🎉 أهلاً بك! تم تأكيد عضويتك.\\nاستخدم القائمة أدناه:"
+    menu_text = "🎉 أهلاً بك! تم تأكيد عضويتك.\nاستخدم القائمة أدناه:"
     menu_keyboard = [
         [{"text": "👤 ملفي الشخصي", "style": "primary"}, {"text": "🎁 دعوة الأصدقاء", "style": "success"}],
         [{"text": "ℹ️ المساعدة", "style": "primary"}, {"text": "🌐 تغيير اللغة", "style": "primary"}]
     ]
 elif menu_language == "en":
-    menu_text = "🎉 Welcome! Your membership is confirmed.\\nChoose an option below:"
+    menu_text = "🎉 Welcome! Your membership is confirmed.\nChoose an option below:"
     menu_keyboard = [
         [{"text": "👤 My Profile", "style": "primary"}, {"text": "🎁 Invite Friends", "style": "success"}],
         [{"text": "ℹ️ Help", "style": "primary"}, {"text": "🌐 Change Language", "style": "primary"}]
     ]
 else:
-    menu_text = "🎉 ښه راغلاست! ستا ګډون تایید شو.\\nله لاندې مینو څخه یوه برخه انتخاب کړه:"
+    menu_text = "🎉 ښه راغلاست! ستا ګډون تایید شو.\nله لاندې مینو څخه یوه برخه انتخاب کړه:"
     menu_keyboard = [
         [{"text": "👤 زما پروفایل", "style": "primary"}, {"text": "🎁 ملګري دعوت کړه", "style": "success"}],
         [{"text": "ℹ️ مرسته", "style": "primary"}, {"text": "🌐 ژبه بدلول", "style": "primary"}]
