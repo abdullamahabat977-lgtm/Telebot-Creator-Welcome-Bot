@@ -1,0 +1,34 @@
+# TBC command: complete_membership
+# Called only after every required group/channel has been confirmed.
+# Rewards are guarded so repeated starts/checks do not award them again.
+
+if not User.getData("membership_completed"):
+    # Welcome reward: every new user receives one level, regardless of referral.
+    if not User.getData("welcome_level_awarded"):
+        current_level = User.getData("level")
+        if not current_level:
+            User.saveData("level", 1)
+        User.saveData("welcome_level_awarded", True)
+
+    # Referral reward goes to the inviter, not the newly joined user.
+    referrer_id = User.getData("referrer_candidate")
+    if referrer_id and str(referrer_id) != str(u) and not User.getData("referral_rewarded"):
+        reward = Bot.getData("referral_reward")
+        if reward is None:
+            reward = 15
+        reward = int(reward)
+
+        referrer_points = User.getData("points", user=str(referrer_id))
+        if not referrer_points:
+            referrer_points = 0
+
+        User.saveData(
+            "points",
+            int(referrer_points) + reward,
+            user=str(referrer_id)
+        )
+        User.saveData("referral_rewarded", True)
+
+    User.saveData("membership_completed", True)
+
+bot.runCommand("show_main_menu")
